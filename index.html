@@ -1,0 +1,3250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Puckwake</title>
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffe8c4 0%, #ffc3a3 50%, #f2a3bd 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e2a47;
+  }
+  #c {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+  }
+  #c.hide-cursor {
+    cursor: none;
+  }
+  #pauseBtn {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    background: #1e2a47;
+    box-shadow: 0 4px 12px rgba(30, 42, 71, 0.25);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+  }
+  #pauseBtn.on {
+    display: flex;
+  }
+  #pauseBtn:hover {
+    background: #28385e;
+  }
+  #pauseBtn:active {
+    transform: translateY(1px);
+  }
+  #pauseBtn span {
+    display: block;
+    width: 4px;
+    height: 16px;
+    background: #ffffff;
+    border-radius: 2px;
+  }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(22, 31, 54, 0.46);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    z-index: 20;
+  }
+  .overlay.on {
+    display: flex;
+  }
+  .card {
+    background: #fffcf8;
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(22, 31, 54, 0.28), 0 0 0 1px rgba(30, 42, 71, 0.08);
+    width: 100%;
+    max-width: 430px;
+    padding: 18px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #63708e;
+    margin: 0;
+  }
+  h1.brand {
+    margin: -2px 0 0;
+    font-size: 40px;
+    line-height: 1.04;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(92deg, #ff7a3d 0%, #f96860 46%, #2f8cff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  h2.card-title {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 900;
+    color: #1e2a47;
+  }
+  .tagline {
+    margin: 0;
+    font-size: 14px;
+    color: #4a5775;
+    font-weight: 500;
+  }
+  .sec-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7896;
+    margin: 2px 0 -4px;
+  }
+  .mode-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cpu-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+  button.btn {
+    min-height: 48px;
+    border-radius: 13px;
+    border: 2px solid #dfe7f2;
+    background: #f5f9fc;
+    color: #1e2a47;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: transform 0.08s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+  button.btn:hover {
+    border-color: #ff7a3d;
+    background: #fff5ef;
+  }
+  button.btn:active {
+    transform: translateY(1px);
+  }
+  button.btn.duo {
+    width: 100%;
+    border-color: #cfe2ff;
+    background: #f0f6ff;
+  }
+  button.btn.duo:hover {
+    border-color: #2f8cff;
+    background: #e6f0ff;
+  }
+  button.btn.primary {
+    background: #1e2a47;
+    border-color: #1e2a47;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  button.btn.primary:hover {
+    background: #2b3b63;
+    border-color: #2b3b63;
+  }
+  .btn-main {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+  .btn-sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: #63708e;
+    line-height: 1.15;
+  }
+  #controls {
+    width: 100%;
+    background: #f3f7fa;
+    border-radius: 11px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+    color: #4c5a78;
+    line-height: 1.3;
+  }
+  #controls div {
+    margin: 0;
+  }
+  .sound-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3d4b69;
+    cursor: pointer;
+    margin-top: 1px;
+  }
+  .sound-row input {
+    width: 16px;
+    height: 16px;
+    accent-color: #ff7a3d;
+    cursor: pointer;
+    margin: 0;
+  }
+  .action-col {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .action-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  #pauseScore {
+    font-size: 16px;
+    font-weight: 700;
+    color: #465473;
+    margin: 2px 0 4px;
+  }
+  #overScore {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1;
+    margin: 2px 0;
+    letter-spacing: 0.02em;
+  }
+  .c-orange { color: #ff7a3d; }
+  .c-blue { color: #2f8cff; }
+  .c-dash { color: #95a2bd; }
+  #overNote {
+    font-size: 14px;
+    font-weight: 600;
+    color: #364463;
+    margin: 0;
+    line-height: 1.35;
+  }
+  #overStats {
+    font-size: 12px;
+    font-weight: 600;
+    color: #687694;
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+
+  @media (max-width: 359px) {
+    .card {
+      padding: 15px 14px;
+      gap: 8px;
+    }
+    .cpu-row {
+      gap: 6px;
+    }
+    .btn-sub {
+      font-size: 10px;
+    }
+  }
+
+  /* Below 540px of height: smaller type and the four start buttons in one row */
+  @media (max-height: 539px) {
+    .card {
+      max-width: 520px;
+      padding: 12px 16px;
+      gap: 6px;
+      border-radius: 18px;
+    }
+    .eyebrow {
+      font-size: 10px;
+    }
+    h1.brand {
+      font-size: 28px;
+    }
+    h2.card-title {
+      font-size: 23px;
+    }
+    .tagline {
+      font-size: 12.5px;
+    }
+    .sec-label {
+      display: none;
+    }
+    .mode-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .cpu-row {
+      display: contents;
+    }
+    button.btn {
+      min-height: 44px;
+      padding: 4px 5px;
+    }
+    .btn-main {
+      font-size: 13px;
+    }
+    .btn-sub {
+      font-size: 10px;
+    }
+    #controls {
+      padding: 5px 8px;
+      font-size: 11px;
+      gap: 2px;
+    }
+    #pauseScore {
+      font-size: 14px;
+      margin: 0;
+    }
+    .action-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    #overScore {
+      font-size: 28px;
+      margin: 0;
+    }
+    #overNote {
+      font-size: 12.5px;
+    }
+    #overStats {
+      font-size: 11px;
+      margin: 0;
+    }
+  }
+
+  /* Below 360px of height: control lines hide */
+  @media (max-height: 359px) {
+    .card {
+      padding: 10px 14px;
+      gap: 4px;
+    }
+    h1.brand {
+      font-size: 24px;
+    }
+    h2.card-title {
+      font-size: 20px;
+    }
+    .tagline {
+      font-size: 11.5px;
+    }
+    #controls {
+      display: none;
+    }
+    #overScore {
+      font-size: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <button id="pauseBtn" type="button" aria-label="Pause">
+    <span></span><span></span>
+  </button>
+
+  <div id="title" class="overlay on">
+    <div class="card">
+      <p class="eyebrow">AIR TABLE HOCKEY</p>
+      <h1 class="brand">Puckwake</h1>
+      <p class="tagline">One table, two mallets. First to 7 wins.</p>
+
+      <div class="mode-group">
+        <div class="sec-label">Play the computer</div>
+        <div class="cpu-row">
+          <button id="easyBtn" class="btn" type="button">
+            <span class="btn-main">Easy</span>
+            <span id="recEasy" class="btn-sub">Not played</span>
+          </button>
+          <button id="normalBtn" class="btn" type="button">
+            <span class="btn-main">Normal</span>
+            <span id="recNormal" class="btn-sub">Not played</span>
+          </button>
+          <button id="hardBtn" class="btn" type="button">
+            <span class="btn-main">Hard</span>
+            <span id="recHard" class="btn-sub">Not played</span>
+          </button>
+        </div>
+        <div class="sec-label">Two players</div>
+        <button id="duoBtn" class="btn duo" type="button">
+          <span class="btn-main">2 Players</span>
+          <span class="btn-sub">one screen</span>
+        </button>
+      </div>
+
+      <div id="controls">
+        <div id="ctrlLine1">Mouse or W A S D moves your mallet</div>
+        <div id="ctrlLine2">Two players: W A S D on the left, arrow keys on the right</div>
+        <div id="ctrlLine3">P or Esc pauses · M turns sound off</div>
+      </div>
+
+      <label class="sound-row">
+        <input id="soundBox1" type="checkbox" checked>
+        <span>Sound</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="paused" class="overlay">
+    <div class="card">
+      <h2 class="card-title">Paused</h2>
+      <div id="pauseScore">You 0 – 0 Computer · Normal</div>
+      <div class="action-col">
+        <button id="resumeBtn" class="btn primary" type="button">Resume</button>
+        <button id="restartBtn" class="btn" type="button"><span class="btn-main">Restart match</span></button>
+        <button id="menuBtn" class="btn" type="button"><span class="btn-main">Menu</span></button>
+      </div>
+      <label class="sound-row">
+        <input id="soundBox2" type="checkbox" checked>
+        <span>Sound</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="over" class="overlay">
+    <div class="card">
+      <p id="overEyebrow" class="eyebrow">MATCH OVER · NORMAL</p>
+      <h2 id="overTitle" class="card-title">You win!</h2>
+      <div id="overScore"><span class="c-orange">7</span> <span class="c-dash">–</span> <span class="c-blue">0</span></div>
+      <p id="overNote">You beat the Normal computer.</p>
+      <p id="overStats">Record on Normal: 1 won · 0 lost · Match time 0:45 · 18 hits</p>
+      <div class="action-row">
+        <button id="rematchBtn" class="btn primary" type="button">Rematch</button>
+        <button id="overMenuBtn" class="btn" type="button"><span class="btn-main">Menu</span></button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- TABLE & LEVEL CONSTANTS ---
+  const TABLE = {
+    length: 1000,
+    width: 560,
+    goalHalf: 100,
+    puckR: 21,
+    malletR: 34,
+    maxPuck: 2400,
+    winAt: 7
+  };
+  const CORNER_R = 60;
+  const RAIL_W = 28;
+  const GOAL_Y_MIN = 280 - TABLE.goalHalf; // 180
+  const GOAL_Y_MAX = 280 + TABLE.goalHalf; // 380
+  const DT = 1 / 240;
+
+  const LEVELS = {
+    easy:   { speed: 620,  strike: 800,  think: 0.24,  err: 120, lead: 0.35, bank: 0,    react: 0.3,  derr: 90 },
+    normal: { speed: 950,  strike: 1050, think: 0.13,  err: 60,  lead: 0.75, bank: 0.15, react: 0.2,  derr: 45 },
+    hard:   { speed: 1800, strike: 1900, think: 0.065, err: 24,  lead: 1,    bank: 0.3,  react: 0.12, derr: 24 }
+  };
+
+  // --- SEEDED PRNG (mulberry32) FOR GAMEPLAY / AI ONLY ---
+  let currentSeed = 123456789;
+  let rngState = 123456789;
+
+  function setSeed(s) {
+    const n = Number(s);
+    currentSeed = (Number.isFinite(n) ? (n >>> 0) : 123456789) || 1;
+    rngState = currentSeed;
+  }
+
+  function rand() {
+    let t = (rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  function randRange(min, max) {
+    return min + (max - min) * rand();
+  }
+
+  // Effects-only random helper (uses Math.random so simulation PRNG is untouched)
+  function fxRand(min, max) {
+    return min + (max - min) * Math.random();
+  }
+
+  // --- STORAGE ---
+  function loadStats() {
+    const empty = {
+      easy: { won: 0, lost: 0 },
+      normal: { won: 0, lost: 0 },
+      hard: { won: 0, lost: 0 }
+    };
+    try {
+      const raw = localStorage.getItem('puckwake.stats');
+      if (!raw) return empty;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return empty;
+      for (const k of ['easy', 'normal', 'hard']) {
+        const rec = parsed[k];
+        if (rec && typeof rec === 'object') {
+          const w = Number(rec.won);
+          const l = Number(rec.lost);
+          empty[k].won = (Number.isFinite(w) && w >= 0) ? Math.floor(w) : 0;
+          empty[k].lost = (Number.isFinite(l) && l >= 0) ? Math.floor(l) : 0;
+        }
+      }
+    } catch (_) {}
+    return empty;
+  }
+
+  function saveStats(stats) {
+    try {
+      localStorage.setItem('puckwake.stats', JSON.stringify(stats));
+    } catch (_) {}
+  }
+
+  function loadSoundSetting() {
+    try {
+      const raw = localStorage.getItem('puckwake.sound');
+      if (raw === 'false' || raw === '0') return false;
+      if (raw === 'true' || raw === '1') return true;
+    } catch (_) {}
+    return true;
+  }
+
+  function saveSoundSetting(on) {
+    try {
+      localStorage.setItem('puckwake.sound', on ? 'true' : 'false');
+    } catch (_) {}
+  }
+
+  let stats = loadStats();
+  let soundOn = loadSoundSetting();
+
+  // --- DOM ELEMENTS ---
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const titleOverlay = document.getElementById('title');
+  const pausedOverlay = document.getElementById('paused');
+  const overOverlay = document.getElementById('over');
+
+  const easyBtn = document.getElementById('easyBtn');
+  const normalBtn = document.getElementById('normalBtn');
+  const hardBtn = document.getElementById('hardBtn');
+  const duoBtn = document.getElementById('duoBtn');
+  const recEasy = document.getElementById('recEasy');
+  const recNormal = document.getElementById('recNormal');
+  const recHard = document.getElementById('recHard');
+
+  const ctrlLine1 = document.getElementById('ctrlLine1');
+  const ctrlLine2 = document.getElementById('ctrlLine2');
+  const ctrlLine3 = document.getElementById('ctrlLine3');
+
+  const soundBox1 = document.getElementById('soundBox1');
+  const soundBox2 = document.getElementById('soundBox2');
+
+  const pauseScoreEl = document.getElementById('pauseScore');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const menuBtn = document.getElementById('menuBtn');
+
+  const overEyebrowEl = document.getElementById('overEyebrow');
+  const overTitleEl = document.getElementById('overTitle');
+  const overScoreEl = document.getElementById('overScore');
+  const overNoteEl = document.getElementById('overNote');
+  const overStatsEl = document.getElementById('overStats');
+  const rematchBtn = document.getElementById('rematchBtn');
+  const overMenuBtn = document.getElementById('overMenuBtn');
+
+  // --- LAYOUT & ORIENTATION ---
+  let orient = 'landscape';
+  let isTouch = false;
+  let scale = 1;
+  let tableLeft = 0;
+  let tableTop = 0;
+  let dpr = 1;
+  let winW = 800;
+  let winH = 600;
+
+  function detectTouch() {
+    try {
+      isTouch = !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+    } catch (_) {
+      isTouch = false;
+    }
+    if (isTouch) {
+      ctrlLine1.textContent = 'Drag your mallet with one finger';
+      ctrlLine2.textContent = 'Two players: each drags on their own half';
+      ctrlLine3.textContent = 'Lay the phone flat between you';
+    } else {
+      ctrlLine1.textContent = 'Mouse or W A S D moves your mallet';
+      ctrlLine2.textContent = 'Two players: W A S D on the left, arrow keys on the right';
+      ctrlLine3.textContent = 'P or Esc pauses · M turns sound off';
+    }
+  }
+
+  function updateLayout() {
+    winW = Math.max(1, window.innerWidth || 800);
+    winH = Math.max(1, window.innerHeight || 600);
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(winW * dpr);
+    canvas.height = Math.round(winH * dpr);
+
+    orient = (winW >= winH) ? 'landscape' : 'portrait';
+    const outerTU_W = (orient === 'landscape') ? (TABLE.length + 2 * RAIL_W) : (TABLE.width + 2 * RAIL_W);
+    const outerTU_H = (orient === 'landscape') ? (TABLE.width + 2 * RAIL_W) : (TABLE.length + 2 * RAIL_W);
+
+    // 8 px on each side, plus a 52 px band on right or top (whichever has more room)
+    const availW_R = Math.max(10, winW - 16 - 52);
+    const availH_R = Math.max(10, winH - 16);
+    const scaleR = Math.min(availW_R / outerTU_W, availH_R / outerTU_H);
+
+    const availW_T = Math.max(10, winW - 16);
+    const availH_T = Math.max(10, winH - 16 - 52);
+    const scaleT = Math.min(availW_T / outerTU_W, availH_T / outerTU_H);
+
+    let boxX, boxY, boxW, boxH;
+    if (scaleR >= scaleT) {
+      scale = scaleR;
+      boxX = 8;
+      boxY = 8;
+      boxW = availW_R;
+      boxH = availH_R;
+    } else {
+      scale = scaleT;
+      boxX = 8;
+      boxY = 8 + 52;
+      boxW = availW_T;
+      boxH = availH_T;
+    }
+
+    const outerPxW = outerTU_W * scale;
+    const outerPxH = outerTU_H * scale;
+    const outerLeft = boxX + (boxW - outerPxW) * 0.5;
+    const outerTop = boxY + (boxH - outerPxH) * 0.5;
+
+    tableLeft = outerLeft + RAIL_W * scale;
+    tableTop = outerTop + RAIL_W * scale;
+  }
+
+  function ensureLayout() {
+    const w = Math.max(1, window.innerWidth || 800);
+    const h = Math.max(1, window.innerHeight || 600);
+    if (w !== winW || h !== winH) {
+      detectTouch();
+      updateLayout();
+    }
+  }
+
+  function screenOf(x, y) {
+    ensureLayout();
+    if (orient === 'landscape') {
+      return {
+        x: tableLeft + x * scale,
+        y: tableTop + y * scale
+      };
+    } else {
+      return {
+        x: tableLeft + y * scale,
+        y: tableTop + (TABLE.length - x) * scale
+      };
+    }
+  }
+
+  function toTable(sx, sy) {
+    ensureLayout();
+    if (orient === 'landscape') {
+      return {
+        x: (sx - tableLeft) / scale,
+        y: (sy - tableTop) / scale
+      };
+    } else {
+      return {
+        x: TABLE.length - (sy - tableTop) / scale,
+        y: (sx - tableLeft) / scale
+      };
+    }
+  }
+
+  // --- GAME STATE ---
+  let screen = 'title'; // "title" | "play" | "goal" | "over"
+  let paused = false;
+  let mode = 'cpu';     // "cpu" | "duo"
+  let level = 'normal'; // "easy" | "normal" | "hard" | null
+  let score = [0, 0];
+  let winner = null;    // 0 | 1 | null
+  let serveSide = 0;    // 0 | 1
+  let matchTime = 0;
+  let matchHits = 0;
+  let counted = false;
+  let fromSetScore = false;
+
+  let calloutText = null;
+  let calloutSub = null;
+  let calloutTimer = 0;
+  let calloutFadeTriggered = false;
+  let goalTimer = 0;
+
+  const puck = {
+    x: 250,
+    y: 280,
+    vx: 0,
+    vy: 0,
+    last: -1
+  };
+
+  function createMallet(side) {
+    return {
+      side,
+      x: side === 0 ? 110 : 890,
+      y: 280,
+      vx: 0,
+      vy: 0,
+      kvx: 0,
+      kvy: 0,
+      pointerTarget: null,
+      bot: null,
+      brain: null
+    };
+  }
+
+  const mallets = [createMallet(0), createMallet(1)];
+
+  // --- EFFECTS STATE & LOGIC ---
+  const particles = [];
+  const rings = [];
+  const trail = [];
+  let trailAccum = 0;
+  let shake = 0;
+  let shakePhase = 0;
+  let goalFlashTimer = 0;
+  let goalFlashDuration = 0.65;
+  let goalFlashEnd = 0; // 0 left end, 1 right end
+  let goalFlashColor = '#ff7a3d';
+
+  function clearEffects() {
+    particles.length = 0;
+    rings.length = 0;
+    trail.length = 0;
+    trailAccum = 0;
+    shake = 0;
+    goalFlashTimer = 0;
+  }
+
+  function addHitRing(x, y, closingSpeed, side) {
+    if (screen === 'title' || closingSpeed <= 250) return;
+    const big = closingSpeed > 1500;
+    const norm = Math.min(1, (closingSpeed - 250) / 1600);
+    rings.push({
+      x,
+      y,
+      r0: big ? 12 : 8,
+      r1: big ? (74 + 18 * Math.min(1, (closingSpeed - 1500) / 900)) : (36 + 24 * norm),
+      age: 0,
+      life: big ? 0.36 : 0.26,
+      lineW: big ? 5.5 : 3.5,
+      color: (side === 0) ? '#ff7a3d' : '#2f8cff'
+    });
+  }
+
+  function addHitSparks(x, y, nx, ny, closingSpeed, side) {
+    if (screen === 'title' || closingSpeed <= 40) return;
+    const count = Math.min(24, Math.max(5, Math.floor(4 + closingSpeed / 120)));
+    const baseAngle = Math.atan2(ny, nx);
+    const palette = (side === 0)
+      ? ['#ff7a3d', '#ffb48f', '#ffd166', '#ffffff']
+      : ['#2f8cff', '#93c4ff', '#6ee7ff', '#ffffff'];
+    const speedFactor = 0.55 + 0.65 * Math.min(1, closingSpeed / 1800);
+
+    for (let i = 0; i < count; i++) {
+      const ang = baseAngle + fxRand(-1.25, 1.25);
+      const sp = fxRand(130, 440) * speedFactor;
+      particles.push({
+        kind: 'spark',
+        x,
+        y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp,
+        size: fxRand(2.4, 4.6),
+        age: 0,
+        life: fxRand(0.18, 0.38),
+        color: palette[Math.floor(Math.random() * palette.length)],
+        drag: 4.5
+      });
+    }
+  }
+
+  function addRailSparks(x, y, inNx, inNy, speed) {
+    if (screen === 'title' || speed <= 900) return;
+    const count = Math.min(14, Math.max(5, Math.floor(4 + (speed - 900) / 180)));
+    const baseAngle = Math.atan2(inNy, inNx);
+    const palette = (puck.last === 0)
+      ? ['#ffb48f', '#ff7a3d', '#ffffff']
+      : (puck.last === 1 ? ['#93c4ff', '#2f8cff', '#ffffff'] : ['#ffffff', '#ffe8c4']);
+
+    for (let i = 0; i < count; i++) {
+      const ang = baseAngle + fxRand(-1.1, 1.1);
+      const sp = fxRand(100, 320);
+      particles.push({
+        kind: 'spark',
+        x,
+        y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp,
+        size: fxRand(2.0, 3.8),
+        age: 0,
+        life: fxRand(0.15, 0.30),
+        color: palette[Math.floor(Math.random() * palette.length)],
+        drag: 5.0
+      });
+    }
+  }
+
+  function addPostSparks(px, py, nx, ny) {
+    if (screen === 'title') return;
+    const baseAngle = Math.atan2(ny, nx);
+    const palette = (px === 0)
+      ? ['#ff7a3d', '#ffb48f', '#ffe8c4', '#ffffff']
+      : ['#2f8cff', '#93c4ff', '#ffe8c4', '#ffffff'];
+
+    for (let i = 0; i < 12; i++) {
+      const ang = baseAngle + fxRand(-1.35, 1.35);
+      const sp = fxRand(130, 360);
+      particles.push({
+        kind: 'spark',
+        x: px,
+        y: py,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp,
+        size: fxRand(2.5, 4.2),
+        age: 0,
+        life: fxRand(0.20, 0.38),
+        color: palette[Math.floor(Math.random() * palette.length)],
+        drag: 4.2
+      });
+    }
+  }
+
+  function addGoalEffects(scorer) {
+    if (screen === 'title') return;
+    const scoredOnEnd = 1 - scorer; // 0 left, 1 right
+    goalFlashEnd = scoredOnEnd;
+    goalFlashColor = (scorer === 0) ? '#ff7a3d' : '#2f8cff';
+    goalFlashDuration = 0.65;
+    goalFlashTimer = goalFlashDuration;
+    shake = Math.max(shake, 12);
+
+    const gx = (scoredOnEnd === 0) ? 0 : TABLE.length;
+    const dirX = (scoredOnEnd === 0) ? 1 : -1;
+    const palette = (scorer === 0)
+      ? ['#ff7a3d', '#ffb48f', '#ffd166', '#ff5964', '#ffffff']
+      : ['#2f8cff', '#93c4ff', '#5ce1e6', '#ffd166', '#ffffff'];
+
+    for (let i = 0; i < 48; i++) {
+      const ang = fxRand(-0.85, 0.85);
+      const sp = fxRand(240, 760);
+      particles.push({
+        kind: 'confetti',
+        x: gx + dirX * fxRand(2, 16),
+        y: fxRand(GOAL_Y_MIN + 15, GOAL_Y_MAX - 15),
+        vx: Math.cos(ang) * sp * dirX,
+        vy: Math.sin(ang) * sp + fxRand(-90, 90),
+        w: fxRand(6, 11),
+        h: fxRand(3.5, 6.5),
+        rot: fxRand(0, Math.PI * 2),
+        vrot: fxRand(-10, 10),
+        age: 0,
+        life: fxRand(0.85, 1.3),
+        color: palette[Math.floor(Math.random() * palette.length)],
+        drag: 2.3
+      });
+    }
+  }
+
+  function addWinConfetti(winSide) {
+    if (screen === 'title') return;
+    const palette = (winSide === 0)
+      ? ['#ff7a3d', '#ffb48f', '#ffd166', '#2f8cff', '#ffffff']
+      : ['#2f8cff', '#93c4ff', '#5ce1e6', '#ff7a3d', '#ffffff'];
+
+    for (let i = 0; i < 72; i++) {
+      const ang = fxRand(0, Math.PI * 2);
+      const sp = fxRand(80, 380);
+      particles.push({
+        kind: 'confetti',
+        x: fxRand(90, TABLE.length - 90),
+        y: fxRand(60, TABLE.width - 60),
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp,
+        w: fxRand(7, 12),
+        h: fxRand(4, 7),
+        rot: fxRand(0, Math.PI * 2),
+        vrot: fxRand(-9, 9),
+        age: 0,
+        life: fxRand(1.1, 1.9),
+        color: palette[Math.floor(Math.random() * palette.length)],
+        drag: 1.8
+      });
+    }
+  }
+
+  function updateEffects(dt) {
+    if (screen === 'title') {
+      clearEffects();
+      return;
+    }
+
+    // Shake decay
+    if (shake > 0) {
+      shakePhase += dt * 55;
+      shake *= Math.exp(-13 * dt);
+      if (shake < 0.08) shake = 0;
+    }
+
+    // Goal flash decay
+    if (goalFlashTimer > 0) {
+      goalFlashTimer -= dt;
+      if (goalFlashTimer < 0) goalFlashTimer = 0;
+    }
+
+    // Rings
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const rg = rings[i];
+      rg.age += dt;
+      if (rg.age >= rg.life) {
+        rings.splice(i, 1);
+      }
+    }
+
+    // Particles (sparks & confetti)
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.age += dt;
+      if (p.age >= p.life) {
+        particles.splice(i, 1);
+        continue;
+      }
+      const damp = Math.exp(-(p.drag || 3) * dt);
+      p.vx *= damp;
+      p.vy *= damp;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.kind === 'confetti') {
+        p.rot += p.vrot * dt;
+      }
+    }
+
+    // Trail behind puck faster than 500
+    for (let i = trail.length - 1; i >= 0; i--) {
+      trail[i].age += dt;
+      if (trail[i].age >= trail[i].maxAge) {
+        trail.splice(i, 1);
+      }
+    }
+
+    if (screen === 'play') {
+      const sp = Math.hypot(puck.vx, puck.vy);
+      if (sp > 500) {
+        trailAccum += dt;
+        if (trailAccum >= 1 / 120) {
+          trailAccum = 0;
+          const col = (puck.last === 0) ? '#ff7a3d' : (puck.last === 1 ? '#2f8cff' : '#63708e');
+          trail.push({
+            x: puck.x,
+            y: puck.y,
+            age: 0,
+            maxAge: 0.14,
+            color: col
+          });
+        }
+      } else {
+        trailAccum = 0;
+      }
+    }
+  }
+
+  // --- WEB AUDIO SYNTHESIZER ---
+  let audioCtx = null;
+  let masterGain = null;
+  let compressor = null;
+  let postGain = null;
+  let analyser = null;
+  let analyserBuf = null;
+  let humGain = null;
+  let noiseBuffer = null;
+  let measuredPeakAmp = 0;
+  let lastHitSoundMs = -1000;
+  let lastRailSoundMs = -1000;
+  let lastPostSoundMs = -1000;
+
+  function initAudio() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      updateAudioState();
+      return;
+    }
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+
+      // Master gain -> compressor (threshold -10, ratio 12) -> gain 0.55 -> analyser -> speakers
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = (soundOn && !paused) ? 1.0 : 0.0;
+
+      compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-10, audioCtx.currentTime);
+      compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+      compressor.knee.setValueAtTime(6, audioCtx.currentTime);
+      compressor.attack.setValueAtTime(0.002, audioCtx.currentTime);
+      compressor.release.setValueAtTime(0.12, audioCtx.currentTime);
+
+      postGain = audioCtx.createGain();
+      postGain.gain.setValueAtTime(0.55, audioCtx.currentTime);
+
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      analyserBuf = new Float32Array(analyser.fftSize);
+
+      masterGain.connect(compressor);
+      compressor.connect(postGain);
+      postGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      // 2-second white noise buffer for clicks, bursts, and air hum
+      const sr = audioCtx.sampleRate;
+      noiseBuffer = audioCtx.createBuffer(1, sr * 2, sr);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      // Soft air hum (looped noise through a 360 Hz low-pass)
+      const humSrc = audioCtx.createBufferSource();
+      humSrc.buffer = noiseBuffer;
+      humSrc.loop = true;
+
+      const humFilter = audioCtx.createBiquadFilter();
+      humFilter.type = 'lowpass';
+      humFilter.frequency.setValueAtTime(360, audioCtx.currentTime);
+      humFilter.Q.setValueAtTime(0.7, audioCtx.currentTime);
+
+      humGain = audioCtx.createGain();
+      humGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+
+      humSrc.connect(humFilter);
+      humFilter.connect(humGain);
+      humGain.connect(masterGain);
+      humSrc.start();
+
+      updateAudioState();
+    } catch (_) {
+      audioCtx = null;
+    }
+  }
+
+  function sampleAnalyserPeak() {
+    if (!analyser || !analyserBuf) return;
+    try {
+      analyser.getFloatTimeDomainData(analyserBuf);
+      for (let i = 0; i < analyserBuf.length; i++) {
+        const a = Math.abs(analyserBuf[i]);
+        if (a > measuredPeakAmp) measuredPeakAmp = a;
+      }
+    } catch (_) {}
+  }
+
+  function updateAudioState() {
+    if (!audioCtx || !masterGain || !humGain) return;
+    const now = audioCtx.currentTime;
+    const active = soundOn && !paused;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(active ? 1.0 : 0.0, now + 0.04);
+
+    const matchActive = active && (screen === 'play' || screen === 'goal');
+    humGain.gain.cancelScheduledValues(now);
+    humGain.gain.setValueAtTime(humGain.gain.value, now);
+    humGain.gain.linearRampToValueAtTime(matchActive ? 0.032 : 0.0, now + 0.04);
+  }
+
+  function playHitSound(closingSpeed) {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const nowMs = performance.now();
+    if (nowMs - lastHitSoundMs < 30) return;
+    lastHitSoundMs = nowMs;
+
+    const now = audioCtx.currentTime;
+    const k = Math.max(0.12, Math.min(1, closingSpeed / 2000));
+
+    // 1. Triangle "tock" at 250 + 230 k Hz for 0.09 s at 0.3 + 0.5 k
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    const freq = 250 + 230 * k;
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.72, now + 0.09);
+
+    const amp = 0.3 + 0.5 * k;
+    g.gain.setValueAtTime(amp, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.092);
+
+    // 2. Short band-passed noise click
+    if (noiseBuffer) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuffer;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(1200 + 600 * k, now);
+      bp.Q.setValueAtTime(2.2, now);
+
+      const ng = audioCtx.createGain();
+      ng.gain.setValueAtTime(0.16 + 0.20 * k, now);
+      ng.gain.exponentialRampToValueAtTime(0.001, now + 0.024);
+
+      nSrc.connect(bp);
+      bp.connect(ng);
+      ng.connect(masterGain);
+      nSrc.start(now, Math.random() * 1.5, 0.03);
+    }
+
+    // 3. 130 to 70 Hz thump above k 0.6
+    if (k > 0.6) {
+      const thumpOsc = audioCtx.createOscillator();
+      const tg = audioCtx.createGain();
+      thumpOsc.type = 'sine';
+      thumpOsc.frequency.setValueAtTime(130, now);
+      thumpOsc.frequency.exponentialRampToValueAtTime(70, now + 0.085);
+
+      const thumpAmp = 0.22 + 0.45 * ((k - 0.6) / 0.4);
+      tg.gain.setValueAtTime(thumpAmp, now);
+      tg.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+
+      thumpOsc.connect(tg);
+      tg.connect(masterGain);
+      thumpOsc.start(now);
+      thumpOsc.stop(now + 0.09);
+    }
+  }
+
+  function playRailSound(impactSpeed) {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const nowMs = performance.now();
+    if (nowMs - lastRailSoundMs < 25) return;
+    lastRailSoundMs = nowMs;
+
+    const now = audioCtx.currentTime;
+    const k = Math.max(0.15, Math.min(1, impactSpeed / 1500));
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(560, now);
+
+    g.gain.setValueAtTime(0.06 + 0.16 * k, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.042);
+
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.045);
+  }
+
+  function playPostSound(impactSpeed) {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const nowMs = performance.now();
+    if (nowMs - lastPostSoundMs < 30) return;
+    lastPostSoundMs = nowMs;
+
+    const now = audioCtx.currentTime;
+    const k = Math.max(0.25, Math.min(1, impactSpeed / 1400));
+    const freqs = [1320, 1980];
+    const amps = [0.22 * k, 0.14 * k];
+
+    for (let i = 0; i < 2; i++) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freqs[i], now);
+      g.gain.setValueAtTime(amps[i], now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.165);
+    }
+  }
+
+  function playGoalSound(scorer) {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const now = audioCtx.currentTime;
+
+    // Burst of low noise
+    if (noiseBuffer) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuffer;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(460, now);
+
+      const ng = audioCtx.createGain();
+      ng.gain.setValueAtTime(0.42, now);
+      ng.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+      nSrc.connect(lp);
+      lp.connect(ng);
+      ng.connect(masterGain);
+      nSrc.start(now, Math.random() * 1.2, 0.26);
+    }
+
+    const playerOrDuoGoal = (mode === 'duo' || scorer === 0);
+    if (playerOrDuoGoal) {
+      // Quick square arpeggio 523, 659, 784 into sawtooth chord 262, 330, 392
+      const arp = [523, 659, 784];
+      for (let i = 0; i < arp.length; i++) {
+        const t0 = now + i * 0.065;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(arp[i], t0);
+        g.gain.setValueAtTime(0.22, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.075);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t0);
+        osc.stop(t0 + 0.08);
+      }
+
+      const chord = [262, 330, 392];
+      const chordStart = now + 0.195;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(1900, chordStart);
+      lp.connect(masterGain);
+
+      for (let i = 0; i < chord.length; i++) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(chord[i], chordStart);
+        g.gain.setValueAtTime(0.15, chordStart);
+        g.gain.exponentialRampToValueAtTime(0.001, chordStart + 0.36);
+        osc.connect(g);
+        g.connect(lp);
+        osc.start(chordStart);
+        osc.stop(chordStart + 0.37);
+      }
+    } else {
+      // Computer's goal: two falling triangle notes
+      const notes = [392, 262];
+      for (let i = 0; i < notes.length; i++) {
+        const t0 = now + i * 0.15;
+        const dur = (i === 0) ? 0.15 : 0.26;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(notes[i], t0);
+        g.gain.setValueAtTime(0.36, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.01);
+      }
+    }
+  }
+
+  function playKickoffSound() {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const now = audioCtx.currentTime;
+    const freqs = [660, 990];
+    for (let i = 0; i < 2; i++) {
+      const t0 = now + i * 0.085;
+      const dur = (i === 0) ? 0.065 : 0.095;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freqs[i], t0);
+      g.gain.setValueAtTime(0.18, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.01);
+    }
+  }
+
+  function playMatchOverSound(winSide) {
+    if (!audioCtx || !soundOn || paused || screen === 'title') return;
+    const now = audioCtx.currentTime;
+    const isWin = (mode === 'duo' || winSide === 0);
+
+    if (isWin) {
+      // Arpeggio 523, 659, 784, 1047, 1319 with a chord under it
+      const arp = [523, 659, 784, 1047, 1319];
+      for (let i = 0; i < arp.length; i++) {
+        const t0 = now + i * 0.075;
+        const dur = (i === arp.length - 1) ? 0.28 : 0.13;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(arp[i], t0);
+        g.gain.setValueAtTime(0.24, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.01);
+      }
+
+      const chord = [262, 330, 392, 523];
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(1600, now);
+      lp.connect(masterGain);
+
+      for (let i = 0; i < chord.length; i++) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(chord[i], now + 0.04);
+        g.gain.setValueAtTime(0.10, now + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
+        osc.connect(g);
+        g.connect(lp);
+        osc.start(now + 0.04);
+        osc.stop(now + 0.60);
+      }
+    } else {
+      // Loss: 392, 330, 262
+      const lossNotes = [392, 330, 262];
+      for (let i = 0; i < lossNotes.length; i++) {
+        const t0 = now + i * 0.14;
+        const dur = (i === 2) ? 0.32 : 0.16;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(lossNotes[i], t0);
+        g.gain.setValueAtTime(0.28, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.01);
+      }
+    }
+  }
+
+  // --- BRAIN IMPLEMENTATION ---
+  function createBrain(side, cfg, levelName) {
+    return {
+      side,
+      cfg: { ...LEVELS.normal, ...cfg },
+      levelName: levelName || 'normal',
+      thinkTimer: 0,
+      sinceRead: 10,
+      readErr: 0,
+      attacking: false,
+      aimX: 1000,
+      aimY: 280,
+      striking: false,
+      shoving: false,
+      targetX: 110,
+      targetY: 280,
+      anchorX: side === 0 ? puck.x : 1000 - puck.x,
+      anchorY: puck.y,
+      stuckTimer: 0,
+      stuck: false,
+      backoffTimer: 0
+    };
+  }
+
+  function setBotOnSide(side, levelOrObj) {
+    const m = mallets[side];
+    if (levelOrObj == null) {
+      m.bot = null;
+      m.brain = null;
+      return;
+    }
+    if (typeof levelOrObj === 'string') {
+      const k = levelOrObj.toLowerCase();
+      const cfg = LEVELS[k] || LEVELS.normal;
+      const name = LEVELS[k] ? k : 'normal';
+      m.bot = name;
+      m.brain = createBrain(side, cfg, name);
+      m.pointerTarget = null;
+    } else if (typeof levelOrObj === 'object') {
+      const cfg = { ...LEVELS.normal, ...levelOrObj };
+      const isEasy = (cfg.speed === LEVELS.easy.speed && cfg.bank === 0 && cfg.lead === LEVELS.easy.lead);
+      const name = levelOrObj.name || (isEasy ? 'easy' : 'custom');
+      m.bot = name;
+      m.brain = createBrain(side, cfg, name);
+      m.pointerTarget = null;
+    }
+  }
+
+  function foldY(rawY) {
+    const minY = TABLE.puckR;
+    const maxY = TABLE.width - TABLE.puckR;
+    const span = maxY - minY; // 518
+    let u = rawY - minY;
+    let bounces = 0;
+    if (u < 0) {
+      u = -u;
+      bounces = 1 + Math.floor(u / span);
+    } else if (u > span) {
+      bounces = Math.floor(u / span);
+    }
+    const period = Math.floor(u / span);
+    const rem = u - period * span;
+    const y = (period % 2 === 0) ? (minY + rem) : (maxY - rem);
+    return { y, bounces };
+  }
+
+  function notifyOtherBrainShot(hitSide) {
+    const otherSide = 1 - hitSide;
+    const otherMallet = mallets[otherSide];
+    const brain = otherMallet.brain;
+    if (!brain) return;
+    const bvx = (otherSide === 0) ? puck.vx : -puck.vx;
+    const speedTowardEnd = -bvx;
+    if (speedTowardEnd > 200 && brain.sinceRead > 0.3) {
+      brain.sinceRead = 0;
+      brain.thinkTimer = brain.cfg.react * randRange(0.8, 1.2);
+      brain.readErr = randRange(-brain.cfg.derr, brain.cfg.derr);
+      brain.striking = false;
+    }
+  }
+
+  function updateBrain(m, dt) {
+    const brain = m.brain;
+    if (!brain) return;
+
+    const side = m.side;
+    const cfg = brain.cfg;
+    brain.sinceRead += dt;
+
+    // During goal pause and on match-over card, go home
+    if (screen === 'goal' || screen === 'over') {
+      brain.targetX = 110;
+      brain.targetY = 280;
+      brain.striking = false;
+      brain.shoving = false;
+      brain.attacking = false;
+      brain.stuckTimer = 0;
+      brain.stuck = false;
+      brain.backoffTimer = 0;
+      return;
+    }
+
+    // Coordinates in this brain's frame
+    const bx = (side === 0) ? puck.x : (TABLE.length - puck.x);
+    const by = puck.y;
+    const bvx = (side === 0) ? puck.vx : -puck.vx;
+    const bvy = puck.vy;
+    const mx = (side === 0) ? m.x : (TABLE.length - m.x);
+    const my = m.y;
+
+    // 4. Stuck & 2s stay-put tracking
+    if (bx <= 500 + TABLE.puckR) {
+      const moveDist = Math.hypot(bx - brain.anchorX, by - brain.anchorY);
+      if (moveDist <= 30) {
+        brain.stuckTimer += dt;
+      } else {
+        brain.anchorX = bx;
+        brain.anchorY = by;
+        brain.stuckTimer = 0;
+      }
+    } else {
+      brain.anchorX = bx;
+      brain.anchorY = by;
+      brain.stuckTimer = 0;
+    }
+
+    brain.stuck = (brain.stuckTimer >= 1.2);
+
+    if (brain.stuckTimer >= 2.0) {
+      brain.backoffTimer = randRange(0.3, 0.8);
+      brain.stuckTimer = 0;
+      brain.stuck = false;
+      brain.shoving = false;
+      brain.striking = false;
+      brain.targetX = 110;
+      brain.targetY = 280;
+    }
+
+    if (brain.backoffTimer > 0) {
+      brain.backoffTimer -= dt;
+      brain.targetX = 110;
+      brain.targetY = 280;
+      brain.striking = false;
+      brain.shoving = false;
+      return;
+    }
+
+    brain.thinkTimer -= dt;
+    if (brain.thinkTimer > 0) {
+      return;
+    }
+    brain.thinkTimer = cfg.think * randRange(0.8, 1.2);
+
+    // Lead moment & Q
+    const distToPuck = Math.hypot(bx - mx, by - my);
+    const leadMoment = Math.min(0.35, distToPuck / cfg.speed) * cfg.lead;
+    const qx = bx + bvx * leadMoment;
+    const qy = foldY(by + bvy * leadMoment).y;
+
+    const isEasy = (brain.levelName === 'easy');
+
+    // 2. Defend while puck and Q are both more than 12.6 past centre line on the other side
+    if (bx > 512.6 && qx > 512.6) {
+      brain.attacking = false;
+      brain.striking = false;
+      brain.shoving = false;
+      if (bvx < -150) {
+        const tx = 90 + 25 * (1 - cfg.lead);
+        let predY;
+        let bounces = 0;
+        if (isEasy) {
+          predY = by + 0.3 * (280 - by);
+          const tCross = Math.max(0, (bx - 110) / (-bvx));
+          bounces = foldY(by + bvy * tCross).bounces;
+        } else {
+          const tCross = Math.max(0, (bx - 110) / (-bvx));
+          const folded = foldY(by + bvy * tCross);
+          predY = folded.y;
+          bounces = folded.bounces;
+        }
+        // pulled 10% toward the middle, plus read error * (1 + 0.8 * bounces)
+        predY = predY + 0.1 * (280 - predY);
+        const ty = predY + brain.readErr * (1 + 0.8 * bounces);
+        brain.targetX = tx;
+        brain.targetY = ty;
+      } else {
+        brain.targetX = 140;
+        brain.targetY = 280 + 0.4 * (by - 280);
+      }
+      return;
+    }
+
+    // 3. Otherwise attack
+    if (!brain.attacking) {
+      brain.attacking = true;
+      let aimY = 280 + randRange(-cfg.err, cfg.err);
+      if (cfg.bank > 0 && rand() < cfg.bank) {
+        if (rand() < 0.5) {
+          aimY = -aimY; // mirror across top rail (y = 0)
+        } else {
+          aimY = 2 * TABLE.width - aimY; // mirror across bottom rail (y = 560)
+        }
+      }
+      brain.aimX = TABLE.length;
+      brain.aimY = aimY;
+    }
+
+    const dxAim = brain.aimX - qx;
+    const dyAim = brain.aimY - qy;
+    const dLen = Math.hypot(dxAim, dyAim) || 1;
+    const Dx = dxAim / dLen;
+    const Dy = dyAim / dLen;
+    const R = 55;
+
+    brain.striking = false;
+    brain.shoving = false;
+
+    // 3a. Shot coming toward its end faster than 450, path reaches goal mouth (+/- puckR), puck > 20 in front (Normal and Hard)
+    if (!isEasy && bvx < -450 && bx > mx + 20) {
+      const tGoal = bx / (-bvx);
+      const yGoal = foldY(by + bvy * tGoal).y;
+      if (Math.abs(yGoal - 280) <= TABLE.goalHalf + TABLE.puckR) {
+        const blockX = Math.max(80, mx);
+        const tBlock = Math.max(0, (bx - blockX) / (-bvx));
+        const yBlock = foldY(by + bvy * tBlock).y;
+        brain.targetX = blockX;
+        brain.targetY = yBlock + brain.readErr;
+        return;
+      }
+    }
+
+    // 3b. Puck already heading away faster than 350 and in front of it
+    if (bvx > 350 && bx > mx) {
+      brain.targetX = 130;
+      brain.targetY = 280 + 0.35 * (by - 280);
+      return;
+    }
+
+    // 3c. Puck tight against its own end (Q within 65 of it) or stuck
+    if (qx <= 65 || brain.stuck) {
+      brain.targetX = bx;
+      brain.targetY = by;
+      brain.shoving = true;
+      return;
+    }
+
+    // Position of mallet relative to Q along D
+    const behind = (qx - mx) * Dx + (qy - my) * Dy;
+    const Nx = -Dy;
+    const Ny = Dx;
+    const sideOffset = (mx - qx) * Nx + (my - qy) * Ny;
+
+    // 3d. Behind Q along D by more than 0.6 R and within 0.8 R of that line: strike
+    if (behind > 0.6 * R && Math.abs(sideOffset) <= 0.8 * R) {
+      brain.targetX = qx + Dx * 70;
+      brain.targetY = qy + Dy * 70;
+      brain.striking = true;
+      return;
+    }
+
+    // 3e. Not more than 0.6 R behind Q along D: go around, to 77 behind Q along D and 71 to the side it is already on
+    if (behind <= 0.6 * R) {
+      const sideSign = (sideOffset >= 0) ? 1 : -1;
+      brain.targetX = qx - Dx * 77 + Nx * sideSign * 71;
+      brain.targetY = qy - Dy * 77 + Ny * sideSign * 71;
+      return;
+    }
+
+    // 3f. Otherwise line up, 63 behind Q along D
+    brain.targetX = qx - Dx * 63;
+    brain.targetY = qy - Dy * 63;
+  }
+
+  // --- MALLET MOVEMENT & BOUNDS ---
+  function clampMalletPos(side, x, y) {
+    const r = TABLE.malletR; // 34
+    const minX = (side === 0) ? r : (500 + r); // 34 or 534
+    const maxX = (side === 0) ? (500 - r) : (TABLE.length - r); // 466 or 966
+    const minY = r; // 34
+    const maxY = TABLE.width - r; // 526
+
+    let cx = Math.max(minX, Math.min(maxX, x));
+    let cy = Math.max(minY, Math.min(maxY, y));
+
+    // Rounded corners (radius 60)
+    if ((cx < CORNER_R || cx > TABLE.length - CORNER_R) &&
+        (cy < CORNER_R || cy > TABLE.width - CORNER_R)) {
+      const arcX = (cx < CORNER_R) ? CORNER_R : (TABLE.length - CORNER_R);
+      const arcY = (cy < CORNER_R) ? CORNER_R : (TABLE.width - CORNER_R);
+      const dx = cx - arcX;
+      const dy = cy - arcY;
+      const dist = Math.hypot(dx, dy);
+      const maxDist = CORNER_R - r; // 26
+      if (dist > maxDist) {
+        cx = arcX + (dx / dist) * maxDist;
+        cy = arcY + (dy / dist) * maxDist;
+      }
+    }
+    return { x: cx, y: cy };
+  }
+
+  // Keyboard state
+  const keysDown = new Set();
+
+  function getKeyboardDirForSide(side) {
+    let sx = 0;
+    let sy = 0;
+    const useWASD = (mode === 'cpu') || (side === 0);
+    const useArrows = (mode === 'cpu') || (side === 1);
+
+    if (useWASD) {
+      if (keysDown.has('KeyW')) sy -= 1;
+      if (keysDown.has('KeyS')) sy += 1;
+      if (keysDown.has('KeyA')) sx -= 1;
+      if (keysDown.has('KeyD')) sx += 1;
+    }
+    if (useArrows) {
+      if (keysDown.has('ArrowUp')) sy -= 1;
+      if (keysDown.has('ArrowDown')) sy += 1;
+      if (keysDown.has('ArrowLeft')) sx -= 1;
+      if (keysDown.has('ArrowRight')) sx += 1;
+    }
+    if (sx === 0 && sy === 0) return { x: 0, y: 0, active: false };
+    const len = Math.hypot(sx, sy);
+    sx /= len;
+    sy /= len;
+
+    // Convert screen direction (sx, sy) to table direction (tx, ty)
+    if (orient === 'landscape') {
+      return { x: sx, y: sy, active: true };
+    } else {
+      // Portrait: screenX increases with +tableY; screenY increases with -tableX
+      return { x: -sy, y: sx, active: true };
+    }
+  }
+
+  function moveMallet(m, dt) {
+    const oldX = m.x;
+    const oldY = m.y;
+
+    if (m.brain) {
+      const rawTX = (m.side === 0) ? m.brain.targetX : (TABLE.length - m.brain.targetX);
+      const rawTY = m.brain.targetY;
+      const target = clampMalletPos(m.side, rawTX, rawTY);
+      const speed = m.brain.striking ? m.brain.cfg.strike : m.brain.cfg.speed;
+      const maxStep = speed * dt;
+      const dx = target.x - m.x;
+      const dy = target.y - m.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist <= maxStep) {
+        m.x = target.x;
+        m.y = target.y;
+      } else {
+        m.x += (dx / dist) * maxStep;
+        m.y += (dy / dist) * maxStep;
+      }
+      const clamped = clampMalletPos(m.side, m.x, m.y);
+      m.x = clamped.x;
+      m.y = clamped.y;
+    } else if (screen === 'over') {
+      m.kvx = 0;
+      m.kvy = 0;
+    } else {
+      const kdir = getKeyboardDirForSide(m.side);
+      if (kdir.active) {
+        m.pointerTarget = null;
+      }
+      if (m.pointerTarget) {
+        m.kvx = 0;
+        m.kvy = 0;
+        const target = clampMalletPos(m.side, m.pointerTarget.x, m.pointerTarget.y);
+        const maxStep = 2600 * dt;
+        const dx = target.x - m.x;
+        const dy = target.y - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= maxStep) {
+          m.x = target.x;
+          m.y = target.y;
+        } else {
+          m.x += (dx / dist) * maxStep;
+          m.y += (dy / dist) * maxStep;
+        }
+        const clamped = clampMalletPos(m.side, m.x, m.y);
+        m.x = clamped.x;
+        m.y = clamped.y;
+      } else {
+        const tvx = kdir.x * 1050;
+        const tvy = kdir.y * 1050;
+        const dvx = tvx - m.kvx;
+        const dvy = tvy - m.kvy;
+        const dlen = Math.hypot(dvx, dvy);
+        const maxDv = 9000 * dt;
+        if (dlen <= maxDv) {
+          m.kvx = tvx;
+          m.kvy = tvy;
+        } else {
+          m.kvx += (dvx / dlen) * maxDv;
+          m.kvy += (dvy / dlen) * maxDv;
+        }
+        const nextPos = clampMalletPos(m.side, m.x + m.kvx * dt, m.y + m.kvy * dt);
+        m.x = nextPos.x;
+        m.y = nextPos.y;
+      }
+    }
+
+    m.vx = (m.x - oldX) / dt;
+    m.vy = (m.y - oldY) / dt;
+  }
+
+  // --- PUCK RAILS, CORNERS, POSTS, MALLETS, SQUEEZES ---
+  const POSTS = [
+    { x: 0, y: GOAL_Y_MIN },
+    { x: 0, y: GOAL_Y_MAX },
+    { x: TABLE.length, y: GOAL_Y_MIN },
+    { x: TABLE.length, y: GOAL_Y_MAX }
+  ];
+
+  function applyRailsCornersPosts(withFx) {
+    const r = TABLE.puckR; // 21
+
+    // Pocket behind goal lines: held within the mouth
+    if (puck.x < 0 || puck.x > TABLE.length) {
+      const minMouthY = GOAL_Y_MIN + r; // 201
+      const maxMouthY = GOAL_Y_MAX - r; // 359
+      if (puck.y < minMouthY) {
+        puck.y = minMouthY;
+        if (puck.vy < 0) {
+          const imp = -puck.vy;
+          puck.vy = -puck.vy * 0.88;
+          puck.vx *= 0.97;
+          if (withFx && imp > 35) playRailSound(imp);
+        }
+      } else if (puck.y > maxMouthY) {
+        puck.y = maxMouthY;
+        if (puck.vy > 0) {
+          const imp = puck.vy;
+          puck.vy = -puck.vy * 0.88;
+          puck.vx *= 0.97;
+          if (withFx && imp > 35) playRailSound(imp);
+        }
+      }
+    }
+
+    // Straight top & bottom rails (outside corner squares)
+    if (puck.x >= CORNER_R && puck.x <= TABLE.length - CORNER_R) {
+      if (puck.y < r) {
+        puck.y = r;
+        if (puck.vy < 0) {
+          const imp = -puck.vy;
+          const totSp = Math.hypot(puck.vx, puck.vy);
+          puck.vy = -puck.vy * 0.88;
+          puck.vx *= 0.97;
+          if (withFx) {
+            if (imp > 35) playRailSound(imp);
+            if (totSp > 900 && imp > 60) addRailSparks(puck.x, 0, 0, 1, totSp);
+          }
+        }
+      } else if (puck.y > TABLE.width - r) {
+        puck.y = TABLE.width - r;
+        if (puck.vy > 0) {
+          const imp = puck.vy;
+          const totSp = Math.hypot(puck.vx, puck.vy);
+          puck.vy = -puck.vy * 0.88;
+          puck.vx *= 0.97;
+          if (withFx) {
+            if (imp > 35) playRailSound(imp);
+            if (totSp > 900 && imp > 60) addRailSparks(puck.x, TABLE.width, 0, -1, totSp);
+          }
+        }
+      }
+    }
+
+    // Straight left & right end rails (outside corner squares and outside goal mouth)
+    if (puck.y >= CORNER_R && puck.y <= TABLE.width - CORNER_R) {
+      if (puck.y <= GOAL_Y_MIN || puck.y >= GOAL_Y_MAX) {
+        if (puck.x < r) {
+          puck.x = r;
+          if (puck.vx < 0) {
+            const imp = -puck.vx;
+            const totSp = Math.hypot(puck.vx, puck.vy);
+            puck.vx = -puck.vx * 0.88;
+            puck.vy *= 0.97;
+            if (withFx) {
+              if (imp > 35) playRailSound(imp);
+              if (totSp > 900 && imp > 60) addRailSparks(0, puck.y, 1, 0, totSp);
+            }
+          }
+        } else if (puck.x > TABLE.length - r) {
+          puck.x = TABLE.length - r;
+          if (puck.vx > 0) {
+            const imp = puck.vx;
+            const totSp = Math.hypot(puck.vx, puck.vy);
+            puck.vx = -puck.vx * 0.88;
+            puck.vy *= 0.97;
+            if (withFx) {
+              if (imp > 35) playRailSound(imp);
+              if (totSp > 900 && imp > 60) addRailSparks(TABLE.length, puck.y, -1, 0, totSp);
+            }
+          }
+        }
+      }
+    }
+
+    // Rounded corners (radius 60)
+    if ((puck.x < CORNER_R || puck.x > TABLE.length - CORNER_R) &&
+        (puck.y < CORNER_R || puck.y > TABLE.width - CORNER_R)) {
+      const cx = (puck.x < CORNER_R) ? CORNER_R : (TABLE.length - CORNER_R);
+      const cy = (puck.y < CORNER_R) ? CORNER_R : (TABLE.width - CORNER_R);
+      const dx = puck.x - cx;
+      const dy = puck.y - cy;
+      const dist = Math.hypot(dx, dy);
+      const maxDist = CORNER_R - r; // 39
+      if (dist > maxDist) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        puck.x = cx + nx * maxDist;
+        puck.y = cy + ny * maxDist;
+        const vn = puck.vx * nx + puck.vy * ny;
+        if (vn > 0) {
+          const totSp = Math.hypot(puck.vx, puck.vy);
+          puck.vx -= 1.88 * vn * nx;
+          puck.vy -= 1.88 * vn * ny;
+          if (withFx) {
+            if (vn > 35) playRailSound(vn);
+            if (totSp > 900 && vn > 60) {
+              addRailSparks(cx + nx * CORNER_R, cy + ny * CORNER_R, -nx, -ny, totSp);
+            }
+          }
+        }
+      }
+    }
+
+    // Goal posts (4 points)
+    for (let i = 0; i < POSTS.length; i++) {
+      const p = POSTS[i];
+      const dx = puck.x - p.x;
+      const dy = puck.y - p.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < r) {
+        const nx = dist > 1e-6 ? (dx / dist) : (p.x === 0 ? 1 : -1);
+        const ny = dist > 1e-6 ? (dy / dist) : 0;
+        puck.x = p.x + nx * r;
+        puck.y = p.y + ny * r;
+        const vn = puck.vx * nx + puck.vy * ny;
+        if (vn < 0) {
+          const imp = -vn;
+          puck.vx -= 1.88 * vn * nx;
+          puck.vy -= 1.88 * vn * ny;
+          if (withFx && imp > 20) {
+            addPostSparks(p.x, p.y, nx, ny);
+            playPostSound(imp);
+          }
+        }
+      }
+    }
+  }
+
+  function capPuckSpeed() {
+    const sp = Math.hypot(puck.vx, puck.vy);
+    if (sp > TABLE.maxPuck) {
+      const k = TABLE.maxPuck / sp;
+      puck.vx *= k;
+      puck.vy *= k;
+    }
+  }
+
+  function applyMalletHits() {
+    const touchDist = TABLE.puckR + TABLE.malletR; // 55
+    for (let side = 0; side < 2; side++) {
+      const m = mallets[side];
+      const dx = puck.x - m.x;
+      const dy = puck.y - m.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < touchDist) {
+        const nx = dist > 1e-6 ? (dx / dist) : (side === 0 ? 1 : -1);
+        const ny = dist > 1e-6 ? (dy / dist) : 0;
+        puck.x = m.x + nx * touchDist;
+        puck.y = m.y + ny * touchDist;
+
+        const rvx = puck.vx - m.vx;
+        const rvy = puck.vy - m.vy;
+        const rvn = rvx * nx + rvy * ny;
+        const closingSpeed = -rvn;
+
+        if (rvn < 0) {
+          puck.vx -= 1.92 * rvn * nx;
+          puck.vy -= 1.92 * rvn * ny;
+          capPuckSpeed();
+        }
+
+        puck.last = side;
+
+        if (closingSpeed > 40) {
+          if (screen === 'play') {
+            matchHits += 1;
+            if (calloutTimer > 0 && !calloutFadeTriggered) {
+              calloutFadeTriggered = true;
+              if (calloutTimer > 0.25) calloutTimer = 0.25;
+            }
+          }
+          if (screen !== 'title') {
+            const contactX = m.x + nx * TABLE.malletR;
+            const contactY = m.y + ny * TABLE.malletR;
+            addHitRing(contactX, contactY, closingSpeed, side);
+            addHitSparks(contactX, contactY, nx, ny, closingSpeed, side);
+            if (closingSpeed > 1700) {
+              const hitShake = 3.5 + 3.5 * Math.min(1, (closingSpeed - 1700) / 700);
+              shake = Math.max(shake, hitShake);
+            }
+            playHitSound(closingSpeed);
+          }
+        }
+
+        // If this mallet's brain was shoving, it backs off home for 0.3 to 0.8 s
+        if (m.brain && m.brain.shoving) {
+          m.brain.backoffTimer = randRange(0.3, 0.8);
+          m.brain.stuckTimer = 0;
+          m.brain.stuck = false;
+          m.brain.shoving = false;
+          m.brain.striking = false;
+          m.brain.targetX = 110;
+          m.brain.targetY = 280;
+        }
+
+        // Notify the other side's computer brain to read the shot
+        notifyOtherBrainShot(side);
+      }
+    }
+  }
+
+  function applySqueezes() {
+    const touchDist = TABLE.puckR + TABLE.malletR; // 55
+    for (let side = 0; side < 2; side++) {
+      const m = mallets[side];
+      const dx = puck.x - m.x;
+      const dy = puck.y - m.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < touchDist - 1e-5) {
+        const nx = dist > 1e-6 ? (dx / dist) : (side === 0 ? 1 : -1);
+        const ny = dist > 1e-6 ? (dy / dist) : 0;
+        const pushed = clampMalletPos(side, puck.x - nx * touchDist, puck.y - ny * touchDist);
+        m.x = pushed.x;
+        m.y = pushed.y;
+
+        const vn = puck.vx * nx + puck.vy * ny;
+        puck.vx -= vn * nx;
+        puck.vy -= vn * ny;
+      }
+    }
+  }
+
+  function servePuck(side) {
+    serveSide = side;
+    const sx = (side === 0) ? 250 : 750;
+    const sy = 280;
+    const m = mallets[side];
+    if (Math.hypot(m.x - sx, m.y - sy) < TABLE.puckR + TABLE.malletR) {
+      m.x = (side === 0) ? 110 : 890;
+      m.y = 280;
+      m.vx = 0;
+      m.vy = 0;
+      m.kvx = 0;
+      m.kvy = 0;
+      if (m.pointerTarget) {
+        m.pointerTarget = { x: m.x, y: m.y };
+      }
+    }
+    puck.x = sx;
+    puck.y = sy;
+    puck.vx = 0;
+    puck.vy = 0;
+    puck.last = -1;
+    trail.length = 0;
+
+    for (let i = 0; i < 2; i++) {
+      const b = mallets[i].brain;
+      if (b) {
+        b.attacking = false;
+        b.striking = false;
+        b.shoving = false;
+        b.stuckTimer = 0;
+        b.stuck = false;
+        b.anchorX = (i === 0) ? puck.x : (TABLE.length - puck.x);
+        b.anchorY = puck.y;
+      }
+    }
+  }
+
+  function checkGoals() {
+    let scorer = -1;
+    if (puck.x < -TABLE.puckR) {
+      scorer = 1; // right scores
+    } else if (puck.x > TABLE.length + TABLE.puckR) {
+      scorer = 0; // left scores
+    }
+    if (scorer === -1) return;
+
+    if (screen === 'title') {
+      // Title rally: silent, no score shown, a goal just serves again
+      servePuck(1 - scorer);
+      return;
+    }
+
+    if (screen !== 'play') return;
+
+    score[scorer] += 1;
+    serveSide = 1 - scorer;
+    screen = 'goal';
+    goalTimer = 1.3;
+    puck.vx = 0;
+    puck.vy = 0;
+
+    addGoalEffects(scorer);
+    playGoalSound(scorer);
+
+    // Goal callout text
+    if (mode === 'cpu') {
+      calloutText = (scorer === 0) ? 'Goal!' : 'Computer scores';
+    } else {
+      calloutText = (scorer === 0) ? 'Orange scores!' : 'Blue scores!';
+    }
+
+    // Goal callout sub
+    if (score[0] === 6 && score[1] === 6) {
+      calloutSub = 'Next goal wins';
+    } else if (score[scorer] === 6 && score[1 - scorer] < 6) {
+      calloutSub = 'Match point';
+    } else {
+      calloutSub = `${score[0]} – ${score[1]}`;
+    }
+    calloutTimer = 1.3;
+    calloutFadeTriggered = true;
+  }
+
+  function finishMatch() {
+    winner = (score[0] >= TABLE.winAt) ? 0 : 1;
+    screen = 'over';
+    calloutText = null;
+    calloutSub = null;
+    calloutTimer = 0;
+
+    if (mode === 'duo' || winner === 0) {
+      addWinConfetti(winner);
+    }
+    playMatchOverSound(winner);
+    updateAudioState();
+
+    let isFirstWin = false;
+    if (counted && mode === 'cpu' && level && stats[level]) {
+      if (winner === 0) {
+        if (stats[level].won === 0) isFirstWin = true;
+        stats[level].won += 1;
+      } else {
+        stats[level].lost += 1;
+      }
+      saveStats(stats);
+      updateTitleRecordsUI();
+    }
+
+    const capLevel = level ? (level.charAt(0).toUpperCase() + level.slice(1)) : 'Normal';
+    overEyebrowEl.textContent = (mode === 'cpu')
+      ? `MATCH OVER · ${(level || 'normal').toUpperCase()}`
+      : 'MATCH OVER · TWO PLAYERS';
+
+    if (mode === 'cpu') {
+      overTitleEl.textContent = (winner === 0) ? 'You win!' : 'Computer wins';
+    } else {
+      overTitleEl.textContent = (winner === 0) ? 'Orange wins!' : 'Blue wins!';
+    }
+    overTitleEl.style.color = (winner === 0) ? '#ff7a3d' : '#2f8cff';
+
+    overScoreEl.innerHTML = `<span class="c-orange">${score[0]}</span> <span class="c-dash">–</span> <span class="c-blue">${score[1]}</span>`;
+
+    let note = '';
+    if (mode === 'cpu') {
+      if (winner === 0) {
+        note = isFirstWin ? `Your first win on ${capLevel}!` : `You beat the ${capLevel} computer.`;
+      } else {
+        note = `The ${capLevel} computer takes it.`;
+      }
+    } else {
+      note = (winner === 0) ? 'Orange takes the table.' : 'Blue takes the table.';
+    }
+    if (fromSetScore) {
+      note += ' Started from a set score, so it stays out of your record.';
+    }
+    overNoteEl.textContent = note;
+
+    const totalSec = Math.floor(matchTime);
+    const mins = Math.floor(totalSec / 60);
+    const secs = String(totalSec % 60).padStart(2, '0');
+    const timeStr = `${mins}:${secs}`;
+    if (mode === 'cpu' && level && stats[level]) {
+      overStatsEl.textContent = `Record on ${capLevel}: ${stats[level].won} won · ${stats[level].lost} lost · Match time ${timeStr} · ${matchHits} hits`;
+    } else {
+      overStatsEl.textContent = `Match time ${timeStr} · ${matchHits} hits`;
+    }
+
+    updateOverlaysUI();
+  }
+
+  // --- SIMULATION STEP ---
+  function step(dt) {
+    if (paused) return;
+
+    // Update visual effects (uses Math.random only, never touches gameplay PRNG)
+    updateEffects(dt);
+
+    // 1. Callout timer
+    if (calloutTimer > 0) {
+      calloutTimer -= dt;
+      if (calloutTimer <= 0) {
+        calloutTimer = 0;
+        calloutText = null;
+        calloutSub = null;
+      }
+    }
+
+    // 2. Goal pause
+    if (screen === 'goal') {
+      goalTimer -= dt;
+      if (goalTimer <= 0) {
+        goalTimer = 0;
+        if (score[0] >= TABLE.winAt || score[1] >= TABLE.winAt) {
+          finishMatch();
+        } else {
+          screen = 'play';
+          calloutText = null;
+          calloutSub = null;
+          calloutTimer = 0;
+          servePuck(serveSide);
+        }
+      }
+    } else if (screen === 'play') {
+      matchTime += dt;
+    }
+
+    // 3. The computer's thinking
+    updateBrain(mallets[0], dt);
+    updateBrain(mallets[1], dt);
+
+    // 4. Both mallets move
+    moveMallet(mallets[0], dt);
+    moveMallet(mallets[1], dt);
+
+    // 5. The puck (stays put during goal pause and on match-over card)
+    if (screen === 'goal' || screen === 'over') {
+      return;
+    }
+
+    // Friction
+    const damp = Math.exp(-0.32 * dt);
+    puck.vx *= damp;
+    puck.vy *= damp;
+
+    // Cap
+    capPuckSpeed();
+
+    // Move
+    puck.x += puck.vx * dt;
+    puck.y += puck.vy * dt;
+
+    // Rails, corners and posts
+    applyRailsCornersPosts(true);
+
+    // Mallets
+    applyMalletHits();
+
+    // Rails again
+    applyRailsCornersPosts(false);
+
+    // Squeezes
+    applySqueezes();
+
+    // Goals
+    checkGoals();
+  }
+
+  // --- UI & OVERLAYS ---
+  function updateTitleRecordsUI() {
+    const fmt = (r) => (r.won === 0 && r.lost === 0) ? 'Not played' : `${r.won} won · ${r.lost} lost`;
+    recEasy.textContent = fmt(stats.easy);
+    recNormal.textContent = fmt(stats.normal);
+    recHard.textContent = fmt(stats.hard);
+  }
+
+  function updatePauseScoreUI() {
+    if (mode === 'cpu') {
+      const capLevel = level ? (level.charAt(0).toUpperCase() + level.slice(1)) : 'Normal';
+      pauseScoreEl.textContent = `You ${score[0]} – ${score[1]} Computer · ${capLevel}`;
+    } else {
+      pauseScoreEl.textContent = `Orange ${score[0]} – ${score[1]} Blue`;
+    }
+  }
+
+  function updateOverlaysUI() {
+    titleOverlay.classList.toggle('on', screen === 'title');
+    pausedOverlay.classList.toggle('on', paused && (screen === 'play' || screen === 'goal'));
+    overOverlay.classList.toggle('on', screen === 'over');
+    pauseBtn.classList.toggle('on', !paused && (screen === 'play' || screen === 'goal'));
+    if (paused || screen === 'title' || screen === 'over') {
+      canvas.classList.remove('hide-cursor');
+    }
+  }
+
+  function syncSoundUI() {
+    soundBox1.checked = soundOn;
+    soundBox2.checked = soundOn;
+  }
+
+  function setSound(on) {
+    soundOn = !!on;
+    saveSoundSetting(soundOn);
+    syncSoundUI();
+    updateAudioState();
+  }
+
+  // --- MATCH FLOW ---
+  function parseScoreOption(raw) {
+    if (raw == null) return null;
+    if (Array.isArray(raw) && raw.length >= 2) {
+      const a = Math.max(0, Math.min(6, Math.floor(Number(raw[0]) || 0)));
+      const b = Math.max(0, Math.min(6, Math.floor(Number(raw[1]) || 0)));
+      return [a, b];
+    }
+    if (typeof raw === 'string') {
+      const m = raw.trim().match(/^(\d)\s*[-–]\s*(\d)$/);
+      if (m) {
+        const a = Math.max(0, Math.min(6, parseInt(m[1], 10)));
+        const b = Math.max(0, Math.min(6, parseInt(m[2], 10)));
+        return [a, b];
+      }
+    }
+    return null;
+  }
+
+  function startMatch(modeArg, options) {
+    const opts = options || {};
+    const mStr = String(modeArg || 'normal').toLowerCase();
+
+    if (opts.seed != null && opts.seed !== '') {
+      setSeed(Number(opts.seed));
+    } else {
+      setSeed(currentSeed);
+    }
+
+    if (mStr === 'duo' || mStr === '2p' || mStr === 'two') {
+      mode = 'duo';
+      level = null;
+    } else {
+      mode = 'cpu';
+      level = (mStr === 'easy' || mStr === 'normal' || mStr === 'hard') ? mStr : 'normal';
+    }
+
+    const parsedScore = parseScoreOption(opts.score);
+    if (parsedScore) {
+      score = [parsedScore[0], parsedScore[1]];
+      fromSetScore = true;
+      counted = false;
+    } else {
+      score = [0, 0];
+      fromSetScore = false;
+      counted = (mode === 'cpu');
+    }
+
+    winner = null;
+    serveSide = 0;
+    matchTime = 0;
+    matchHits = 0;
+    paused = false;
+    screen = 'play';
+    goalTimer = 0;
+    clearEffects();
+
+    // Reset mallets at home
+    for (let i = 0; i < 2; i++) {
+      mallets[i].x = (i === 0) ? 110 : 890;
+      mallets[i].y = 280;
+      mallets[i].vx = 0;
+      mallets[i].vy = 0;
+      mallets[i].kvx = 0;
+      mallets[i].kvy = 0;
+      mallets[i].pointerTarget = null;
+    }
+
+    setBotOnSide(0, null);
+    if (mode === 'cpu') {
+      setBotOnSide(1, level);
+    } else {
+      setBotOnSide(1, null);
+    }
+
+    // Place puck at (250, 280)
+    puck.x = 250;
+    puck.y = 280;
+    puck.vx = 0;
+    puck.vy = 0;
+    puck.last = -1;
+
+    if (mallets[1].brain) {
+      mallets[1].brain.anchorX = TABLE.length - puck.x;
+      mallets[1].brain.anchorY = puck.y;
+    }
+
+    // Opening callout
+    calloutText = 'First to 7';
+    if (fromSetScore) {
+      calloutSub = `${score[0]} – ${score[1]}`;
+    } else if (mode === 'cpu') {
+      const cap = level.charAt(0).toUpperCase() + level.slice(1);
+      calloutSub = `${cap} computer`;
+    } else {
+      calloutSub = 'Two players';
+    }
+    calloutTimer = 1.6;
+    calloutFadeTriggered = false;
+
+    updateOverlaysUI();
+    updateAudioState();
+    playKickoffSound();
+    return getState();
+  }
+
+  function showTitleScreen() {
+    screen = 'title';
+    paused = false;
+    winner = null;
+    calloutText = null;
+    calloutSub = null;
+    calloutTimer = 0;
+    goalTimer = 0;
+    clearEffects();
+
+    setSeed(currentSeed);
+
+    for (let i = 0; i < 2; i++) {
+      mallets[i].x = (i === 0) ? 110 : 890;
+      mallets[i].y = 280;
+      mallets[i].vx = 0;
+      mallets[i].vy = 0;
+      mallets[i].kvx = 0;
+      mallets[i].kvy = 0;
+      mallets[i].pointerTarget = null;
+    }
+    setBotOnSide(0, 'normal');
+    setBotOnSide(1, 'normal');
+
+    puck.x = 250;
+    puck.y = 280;
+    puck.vx = 0;
+    puck.vy = 0;
+    puck.last = -1;
+
+    updateTitleRecordsUI();
+    updateOverlaysUI();
+    updateAudioState();
+    return getState();
+  }
+
+  function pauseGame() {
+    if ((screen === 'play' || screen === 'goal') && !paused) {
+      paused = true;
+      updatePauseScoreUI();
+      updateOverlaysUI();
+      updateAudioState();
+    }
+    return getState();
+  }
+
+  function resumeGame() {
+    if (paused) {
+      paused = false;
+      updateOverlaysUI();
+      updateAudioState();
+    }
+    return getState();
+  }
+
+  // --- DRAWING ---
+  function roundRectPath(c, x, y, w, h, r) {
+    const rr = Math.min(r, w * 0.5, h * 0.5);
+    c.beginPath();
+    c.moveTo(x + rr, y);
+    c.arcTo(x + w, y, x + w, y + h, rr);
+    c.arcTo(x + w, y + h, x, y + h, rr);
+    c.arcTo(x, y + h, x, y, rr);
+    c.arcTo(x, y, x + w, y, rr);
+    c.closePath();
+  }
+
+  function draw() {
+    ensureLayout();
+    sampleAnalyserPeak();
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    // 1. Warm page background gradient (#ffe8c4, #ffc3a3, #f2a3bd) with faint white dots
+    const bgGrad = ctx.createLinearGradient(0, 0, winW, winH);
+    bgGrad.addColorStop(0, '#ffe8c4');
+    bgGrad.addColorStop(0.5, '#ffc3a3');
+    bgGrad.addColorStop(1, '#f2a3bd');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, winW, winH);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+    const dotStep = 28;
+    for (let y = 14; y < winH; y += dotStep) {
+      for (let x = 14; x < winW; x += dotStep) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 2. Transform into table coordinate space (with table shake if active)
+    ctx.save();
+    let shakeOffX = 0;
+    let shakeOffY = 0;
+    if (shake > 0 && screen !== 'title') {
+      shakeOffX = Math.cos(shakePhase) * shake * scale;
+      shakeOffY = Math.sin(shakePhase * 1.63) * shake * scale;
+    }
+
+    if (orient === 'landscape') {
+      ctx.translate(tableLeft + shakeOffX, tableTop + shakeOffY);
+      ctx.scale(scale, scale);
+    } else {
+      ctx.translate(tableLeft + shakeOffX, tableTop + TABLE.length * scale + shakeOffY);
+      ctx.scale(scale, scale);
+      ctx.rotate(-Math.PI / 2);
+    }
+
+    // Shadow offset in table coordinates so shadow always falls down-right on screen
+    const shScreen = 7;
+    const shX = (orient === 'landscape') ? shScreen : -shScreen;
+    const shY = shScreen;
+
+    // Outer table shadow
+    ctx.save();
+    ctx.fillStyle = 'rgba(22, 31, 54, 0.24)';
+    roundRectPath(
+      ctx,
+      -RAIL_W + shX * 1.4,
+      -RAIL_W + shY * 1.4,
+      TABLE.length + 2 * RAIL_W,
+      TABLE.width + 2 * RAIL_W,
+      CORNER_R + RAIL_W
+    );
+    ctx.fill();
+    ctx.restore();
+
+    // Navy rails (#1e2a47)
+    ctx.fillStyle = '#1e2a47';
+    roundRectPath(
+      ctx,
+      -RAIL_W,
+      -RAIL_W,
+      TABLE.length + 2 * RAIL_W,
+      TABLE.width + 2 * RAIL_W,
+      CORNER_R + RAIL_W
+    );
+    ctx.fill();
+
+    // Subtle rail rim highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // PUCKWAKE in small spaced letters on both long rails
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+    ctx.font = '800 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const railLabel = 'P U C K W A K E';
+    ctx.fillText(railLabel, 500, -RAIL_W * 0.5);
+    ctx.fillText(railLabel, 500, TABLE.width + RAIL_W * 0.5);
+    ctx.restore();
+
+    // Dark goal slots lipped in the colour of the side defending them
+    // Left goal slot (orange)
+    ctx.save();
+    roundRectPath(ctx, -23, GOAL_Y_MIN, 25, GOAL_Y_MAX - GOAL_Y_MIN, 8);
+    ctx.fillStyle = '#0d1426';
+    ctx.fill();
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#ff7a3d';
+    ctx.stroke();
+    ctx.restore();
+
+    // Right goal slot (blue)
+    ctx.save();
+    roundRectPath(ctx, TABLE.length - 2, GOAL_Y_MIN, 25, GOAL_Y_MAX - GOAL_Y_MIN, 8);
+    ctx.fillStyle = '#0d1426';
+    ctx.fill();
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#2f8cff';
+    ctx.stroke();
+    ctx.restore();
+
+    // Playing surface: pale mint (#f6fcfc in middle to #dcefee), faintly orange on left and blue on right
+    ctx.save();
+    roundRectPath(ctx, 0, 0, TABLE.length, TABLE.width, CORNER_R);
+    ctx.clip();
+
+    const surfGrad = ctx.createRadialGradient(500, 280, 40, 500, 280, 580);
+    surfGrad.addColorStop(0, '#f6fcfc');
+    surfGrad.addColorStop(1, '#dcefee');
+    ctx.fillStyle = surfGrad;
+    ctx.fillRect(0, 0, TABLE.length, TABLE.width);
+
+    const leftTint = ctx.createLinearGradient(0, 0, 500, 0);
+    leftTint.addColorStop(0, 'rgba(255, 122, 61, 0.08)');
+    leftTint.addColorStop(1, 'rgba(255, 122, 61, 0)');
+    ctx.fillStyle = leftTint;
+    ctx.fillRect(0, 0, 500, TABLE.width);
+
+    const rightTint = ctx.createLinearGradient(500, 0, 1000, 0);
+    rightTint.addColorStop(0, 'rgba(47, 140, 255, 0)');
+    rightTint.addColorStop(1, 'rgba(47, 140, 255, 0.08)');
+    ctx.fillStyle = rightTint;
+    ctx.fillRect(500, 0, 500, TABLE.width);
+
+    // Goal flash on the scored-on end in the scorer's colour
+    if (goalFlashTimer > 0 && screen !== 'title') {
+      const fAlpha = (goalFlashTimer / goalFlashDuration) * 0.45;
+      const gx = (goalFlashEnd === 0) ? 0 : TABLE.length;
+      const fGrad = ctx.createRadialGradient(gx, 280, 20, gx, 280, 520);
+      fGrad.addColorStop(0, goalFlashColor);
+      fGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.save();
+      ctx.globalAlpha = fAlpha;
+      ctx.fillStyle = fGrad;
+      ctx.fillRect(0, 0, TABLE.length, TABLE.width);
+      ctx.restore();
+    }
+
+    // Tiny air-hole dots every 25
+    ctx.fillStyle = 'rgba(30, 42, 71, 0.085)';
+    for (let x = 25; x < TABLE.length; x += 25) {
+      for (let y = 25; y < TABLE.width; y += 25) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Faint centre line and centre circle (radius 85)
+    ctx.strokeStyle = 'rgba(30, 42, 71, 0.12)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(500, 0);
+    ctx.lineTo(500, TABLE.width);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(500, 280, 85, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Crease (radius 135) at each goal in its side's colour
+    ctx.strokeStyle = 'rgba(255, 122, 61, 0.25)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 280, 135, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(47, 140, 255, 0.25)';
+    ctx.beginPath();
+    ctx.arc(TABLE.length, 280, 135, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.stroke();
+
+    // Score on the table (hidden on title rally)
+    if (screen !== 'title') {
+      const quarterFrac = (orient === 'portrait') ? 0.21 : 0.25;
+      const leftScoreX = TABLE.length * quarterFrac;
+      const rightScoreX = TABLE.length * (1 - quarterFrac);
+      const leftLabel = (mode === 'cpu') ? 'YOU' : 'ORANGE';
+      const rightLabel = (mode === 'cpu') ? 'COMPUTER' : 'BLUE';
+
+      const drawHalfScore = (tx, digit, label, color, upsideDown) => {
+        ctx.save();
+        ctx.translate(tx, 280);
+        if (orient === 'portrait') {
+          ctx.rotate(Math.PI * 0.5);
+          if (upsideDown) ctx.rotate(Math.PI);
+        }
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 112px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(String(digit), 0, -8);
+        ctx.font = '800 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(label, 0, 58);
+        ctx.restore();
+      };
+
+      drawHalfScore(leftScoreX, score[0], leftLabel, 'rgba(255, 122, 61, 0.18)', false);
+      drawHalfScore(rightScoreX, score[1], rightLabel, 'rgba(47, 140, 255, 0.18)', orient === 'portrait');
+    }
+
+    // Puck trail (inside surface clip)
+    if (screen !== 'title' && trail.length > 0) {
+      for (let i = 0; i < trail.length; i++) {
+        const pt = trail[i];
+        const frac = Math.max(0, 1 - pt.age / pt.maxAge);
+        ctx.save();
+        ctx.globalAlpha = frac * 0.34;
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, TABLE.puckR * (0.35 + 0.55 * frac), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Expanding hit rings (inside surface clip)
+    if (screen !== 'title' && rings.length > 0) {
+      for (let i = 0; i < rings.length; i++) {
+        const rg = rings[i];
+        const p = Math.min(1, rg.age / rg.life);
+        const ease = 1 - Math.pow(1 - p, 2);
+        const rad = rg.r0 + (rg.r1 - rg.r0) * ease;
+        ctx.save();
+        ctx.globalAlpha = (1 - p) * 0.72;
+        ctx.strokeStyle = rg.color;
+        ctx.lineWidth = rg.lineW * (1 - 0.5 * p);
+        ctx.beginPath();
+        ctx.arc(rg.x, rg.y, rad, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    ctx.restore(); // end surface clip
+
+    // Goal posts (metallic navy/accent caps)
+    for (let i = 0; i < POSTS.length; i++) {
+      const p = POSTS[i];
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = (p.x === 0) ? '#ff7a3d' : '#2f8cff';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#1e2a47';
+      ctx.stroke();
+    }
+
+    // 3. Puck
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(puck.x + shX * 0.65, puck.y + shY * 0.65, TABLE.puckR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(22, 31, 54, 0.22)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(puck.x, puck.y, TABLE.puckR, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e2a47';
+    ctx.fill();
+
+    let rimColor = '#dcefee';
+    if (puck.last === 0) rimColor = '#ffb48f';
+    else if (puck.last === 1) rimColor = '#93c4ff';
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = rimColor;
+    ctx.beginPath();
+    ctx.arc(puck.x, puck.y, TABLE.puckR - 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Mallets
+    const malletColors = [
+      { main: '#ff7a3d', dark: '#c4511f', light: '#ffb48f' },
+      { main: '#2f8cff', dark: '#1a5fc0', light: '#93c4ff' }
+    ];
+    for (let i = 0; i < 2; i++) {
+      const m = mallets[i];
+      const col = malletColors[i];
+      const r = TABLE.malletR;
+
+      ctx.save();
+      // Shadow
+      ctx.beginPath();
+      ctx.arc(m.x + shX * 0.85, m.y + shY * 0.85, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(22, 31, 54, 0.24)';
+      ctx.fill();
+
+      // Main body
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = col.main;
+      ctx.fill();
+
+      // Darker outer ring
+      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = col.dark;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, r - 2.25, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Inner dark groove
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = col.dark;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, r * 0.52, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Lighter raised centre
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, r * 0.45, 0, Math.PI * 2);
+      ctx.fillStyle = col.light;
+      ctx.fill();
+
+      // Highlight
+      ctx.beginPath();
+      ctx.arc(m.x - shX * 0.4, m.y - shY * 0.4, r * 0.16, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 5. Particles (sparks & confetti)
+    if (screen !== 'title' && particles.length > 0) {
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const rem = Math.max(0, 1 - p.age / p.life);
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, rem * 1.25);
+        ctx.fillStyle = p.color;
+        if (p.kind === 'confetti') {
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillRect(-p.w * 0.5, -p.h * 0.5, p.w, p.h);
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * (0.4 + 0.6 * rem), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // 6. Callouts
+    if (calloutText && calloutTimer > 0) {
+      const alpha = Math.max(0, Math.min(1, calloutTimer / 0.25));
+      const drawCalloutAt = (tx, ty, upsideDown) => {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(tx, ty);
+        if (orient === 'portrait') {
+          ctx.rotate(Math.PI * 0.5);
+          if (upsideDown) ctx.rotate(Math.PI);
+        }
+
+        ctx.font = '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const w1 = ctx.measureText(calloutText).width;
+        ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const w2 = calloutSub ? ctx.measureText(calloutSub).width : 0;
+        const boxW = Math.max(w1, w2) + 44;
+        const boxH = calloutSub ? 82 : 56;
+
+        roundRectPath(ctx, -boxW * 0.5, -boxH * 0.5, boxW, boxH, 18);
+        ctx.fillStyle = 'rgba(255, 252, 248, 0.94)';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(30, 42, 71, 0.14)';
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1e2a47';
+        ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(calloutText, 0, calloutSub ? -12 : 0);
+
+        if (calloutSub) {
+          ctx.fillStyle = '#586788';
+          ctx.font = '700 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.fillText(calloutSub, 0, 19);
+        }
+        ctx.restore();
+      };
+
+      if (orient === 'portrait' && mode === 'duo') {
+        drawCalloutAt(500 - 105, 280, false);
+        drawCalloutAt(500 + 105, 280, true);
+      } else {
+        drawCalloutAt(500, 280, false);
+      }
+    }
+
+    ctx.restore(); // end table space
+    ctx.restore(); // end dpr scale
+  }
+
+  // --- CONTROLS & INPUT LISTENERS ---
+  // Start Web Audio on first click or key (capture phase so it runs before button click handlers)
+  window.addEventListener('pointerdown', initAudio, { capture: true, passive: true });
+  window.addEventListener('mousedown', initAudio, { capture: true, passive: true });
+  window.addEventListener('touchstart', initAudio, { capture: true, passive: true });
+  window.addEventListener('keydown', initAudio, { capture: true, passive: true });
+
+  const activeTouches = [null, null];
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (isTouch) return;
+    if (screen !== 'play' && screen !== 'goal') return;
+    if (paused) return;
+    canvas.classList.add('hide-cursor');
+    const pt = toTable(e.clientX, e.clientY);
+    if (!mallets[0].brain) {
+      mallets[0].pointerTarget = { x: pt.x, y: pt.y };
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    canvas.classList.remove('hide-cursor');
+  });
+
+  function handleTouchStartOrMove(e, isStart) {
+    if (screen !== 'play' && screen !== 'goal') return;
+    if (paused) return;
+    e.preventDefault();
+
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      const pt = toTable(t.clientX, t.clientY);
+
+      if (mode === 'cpu') {
+        if (!mallets[0].brain) {
+          activeTouches[0] = t.identifier;
+          mallets[0].pointerTarget = { x: pt.x, y: pt.y };
+        }
+      } else {
+        if (isStart) {
+          const side = (pt.x < 500) ? 0 : 1;
+          if (!mallets[side].brain) {
+            activeTouches[side] = t.identifier;
+            mallets[side].pointerTarget = { x: pt.x, y: pt.y };
+          }
+        } else {
+          for (let side = 0; side < 2; side++) {
+            if (activeTouches[side] === t.identifier && !mallets[side].brain) {
+              mallets[side].pointerTarget = { x: pt.x, y: pt.y };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function handleTouchEnd(e) {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      for (let side = 0; side < 2; side++) {
+        if (activeTouches[side] === t.identifier) {
+          activeTouches[side] = null;
+        }
+      }
+    }
+  }
+
+  canvas.addEventListener('touchstart', (e) => handleTouchStartOrMove(e, true), { passive: false });
+  canvas.addEventListener('touchmove', (e) => handleTouchStartOrMove(e, false), { passive: false });
+  canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+  canvas.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    const code = e.code;
+
+    if (code === 'KeyW' || code === 'KeyA' || code === 'KeyS' || code === 'KeyD' ||
+        code === 'ArrowUp' || code === 'ArrowDown' || code === 'ArrowLeft' || code === 'ArrowRight') {
+      keysDown.add(code);
+      if (screen === 'play' || screen === 'goal') {
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (code === 'KeyP' || code === 'Escape') {
+      if (screen === 'play' || screen === 'goal') {
+        e.preventDefault();
+        if (paused) resumeGame();
+        else pauseGame();
+      }
+      return;
+    }
+
+    if (code === 'KeyM') {
+      e.preventDefault();
+      setSound(!soundOn);
+      return;
+    }
+
+    if (code === 'Enter') {
+      if (paused && (screen === 'play' || screen === 'goal')) {
+        e.preventDefault();
+        resumeGame();
+      } else if (screen === 'over') {
+        e.preventDefault();
+        startMatch(mode === 'duo' ? 'duo' : level);
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keysDown.delete(e.code);
+  });
+
+  window.addEventListener('blur', () => {
+    keysDown.clear();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && (screen === 'play' || screen === 'goal') && !paused) {
+      pauseGame();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    detectTouch();
+    updateLayout();
+    draw();
+  });
+
+  // UI Button Listeners
+  easyBtn.addEventListener('click', () => startMatch('easy'));
+  normalBtn.addEventListener('click', () => startMatch('normal'));
+  hardBtn.addEventListener('click', () => startMatch('hard'));
+  duoBtn.addEventListener('click', () => startMatch('duo'));
+
+  pauseBtn.addEventListener('click', () => pauseGame());
+  resumeBtn.addEventListener('click', () => resumeGame());
+  restartBtn.addEventListener('click', () => startMatch(mode === 'duo' ? 'duo' : level));
+  menuBtn.addEventListener('click', () => showTitleScreen());
+
+  rematchBtn.addEventListener('click', () => startMatch(mode === 'duo' ? 'duo' : level));
+  overMenuBtn.addEventListener('click', () => showTitleScreen());
+
+  soundBox1.addEventListener('change', () => setSound(soundBox1.checked));
+  soundBox2.addEventListener('change', () => setSound(soundBox2.checked));
+
+  // --- HOOKS (window.game) ---
+  function getState() {
+    ensureLayout();
+    const pSpeed = Math.hypot(puck.vx, puck.vy);
+    return {
+      screen,
+      paused,
+      mode,
+      level: mode === 'cpu' ? level : null,
+      score: [score[0], score[1]],
+      winner,
+      serveSide,
+      time: matchTime,
+      hits: matchHits,
+      orient,
+      touch: isTouch,
+      scale,
+      seed: currentSeed,
+      counted,
+      callout: (calloutText && calloutTimer > 0) ? { text: calloutText, sub: calloutSub } : null,
+      puck: {
+        x: puck.x,
+        y: puck.y,
+        vx: puck.vx,
+        vy: puck.vy,
+        speed: pSpeed,
+        inGoal: (puck.x < 0 || puck.x > TABLE.length),
+        last: puck.last
+      },
+      mallets: mallets.map((m) => ({
+        x: m.x,
+        y: m.y,
+        vx: m.vx,
+        vy: m.vy,
+        bot: m.bot
+      }))
+    };
+  }
+
+  window.game = {
+    state() {
+      return getState();
+    },
+    table() {
+      return { ...TABLE };
+    },
+    levels() {
+      return {
+        easy: { ...LEVELS.easy },
+        normal: { ...LEVELS.normal },
+        hard: { ...LEVELS.hard }
+      };
+    },
+    start(modeArg, options) {
+      const s = startMatch(modeArg, options);
+      draw();
+      return s;
+    },
+    title() {
+      const s = showTitleScreen();
+      draw();
+      return s;
+    },
+    advance(seconds) {
+      if (!paused) {
+        const steps = Math.max(0, Math.round((Number(seconds) || 0) * 240));
+        for (let i = 0; i < steps; i++) {
+          step(DT);
+        }
+        draw();
+      }
+      return getState();
+    },
+    placePuck(x, y, vx = 0, vy = 0) {
+      puck.x = Number(x) || 0;
+      puck.y = Number(y) || 0;
+      puck.vx = Number(vx) || 0;
+      puck.vy = Number(vy) || 0;
+      capPuckSpeed();
+      for (let i = 0; i < 2; i++) {
+        const b = mallets[i].brain;
+        if (b) {
+          b.anchorX = (i === 0) ? puck.x : (TABLE.length - puck.x);
+          b.anchorY = puck.y;
+          b.stuckTimer = 0;
+          b.stuck = false;
+        }
+      }
+      draw();
+      return getState();
+    },
+    setMallet(side, x, y) {
+      const s = (side === 1) ? 1 : 0;
+      const m = mallets[s];
+      const clamped = clampMalletPos(s, Number(x) || 0, Number(y) || 0);
+      m.x = clamped.x;
+      m.y = clamped.y;
+      m.vx = 0;
+      m.vy = 0;
+      m.kvx = 0;
+      m.kvy = 0;
+      m.pointerTarget = { x: clamped.x, y: clamped.y };
+      if (m.brain) {
+        m.brain.targetX = (s === 0) ? clamped.x : (TABLE.length - clamped.x);
+        m.brain.targetY = clamped.y;
+      }
+      draw();
+      return getState();
+    },
+    target(side, x, y) {
+      const s = (side === 1) ? 1 : 0;
+      const m = mallets[s];
+      setBotOnSide(s, null);
+      if (x == null || y == null) {
+        m.pointerTarget = null;
+      } else {
+        m.pointerTarget = { x: Number(x), y: Number(y) };
+        m.kvx = 0;
+        m.kvy = 0;
+      }
+      return getState();
+    },
+    bot(side, levelOrObj) {
+      const s = (side === 1) ? 1 : 0;
+      setBotOnSide(s, levelOrObj);
+      return getState();
+    },
+    pause() {
+      const s = pauseGame();
+      draw();
+      return s;
+    },
+    resume() {
+      const s = resumeGame();
+      draw();
+      return s;
+    },
+    screenOf(x, y) {
+      return screenOf(Number(x) || 0, Number(y) || 0);
+    },
+    toTable(x, y) {
+      return toTable(Number(x) || 0, Number(y) || 0);
+    },
+    sound() {
+      return {
+        on: soundOn,
+        state: audioCtx ? audioCtx.state : 'none'
+      };
+    },
+    audioPeak() {
+      sampleAnalyserPeak();
+      const amp = measuredPeakAmp;
+      measuredPeakAmp = 0;
+      if (amp <= 1e-6) return -120;
+      return 20 * Math.log10(amp);
+    },
+    fx() {
+      return {
+        particles: particles.length,
+        rings: rings.length,
+        trail: trail.length,
+        shake,
+        flash: goalFlashTimer > 0
+      };
+    }
+  };
+
+  // --- INITIALIZATION & URL PARAMS ---
+  detectTouch();
+  updateLayout();
+  syncSoundUI();
+  updateTitleRecordsUI();
+
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const seedParam = params.get('seed');
+    if (seedParam != null && seedParam !== '') {
+      setSeed(Number(seedParam));
+    }
+    const modeParam = params.get('mode');
+    const scoreParam = params.get('score');
+    if (modeParam && /^(easy|normal|hard|duo)$/i.test(modeParam.trim())) {
+      startMatch(modeParam.trim().toLowerCase(), {
+        score: scoreParam,
+        seed: seedParam != null && seedParam !== '' ? Number(seedParam) : undefined
+      });
+    } else {
+      showTitleScreen();
+    }
+  } catch (_) {
+    showTitleScreen();
+  }
+
+  // --- MAIN ANIMATION LOOP ---
+  let lastTime = performance.now();
+  let acc = 0;
+
+  function frame(now) {
+    const rawDt = (now - lastTime) / 1000;
+    lastTime = now;
+    const frameDt = Math.max(0, Math.min(0.05, rawDt));
+
+    if (!paused) {
+      acc += frameDt;
+      let steps = 0;
+      while (acc >= DT && steps < 48) {
+        step(DT);
+        acc -= DT;
+        steps++;
+      }
+      if (steps === 48) acc = 0;
+    } else {
+      acc = 0;
+    }
+
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  draw();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
