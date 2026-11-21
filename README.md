@@ -2,7 +2,7 @@
 
 An air table hockey game in one HTML file, built by a single prompt in Google Antigravity (Gemini 4 Argon).
 
-Play it: https://gradedprompts.github.io/puckwake/
+Play it: https://games.gradedprompts.com/puckwake/
 
 `index.html` is the unedited output of one run of the prompt. Nothing was changed by hand after the run.
 SHA-256: `6ac4682a2e038c8c538ceb781ac072961f744185afbc51f98b830b235b1298dd`
